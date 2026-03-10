@@ -4,10 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="50539268-beff-4a87-a376-b0a7542787a5" name="Changes" comment="Add in spreadsheet UI">
-      <change beforePath="$PROJECT_DIR$/.env.local.example" beforeDir="false" afterPath="$PROJECT_DIR$/.env.local.example" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-    </list>
+    <list default="true" id="50539268-beff-4a87-a376-b0a7542787a5" name="Changes" comment="seed data" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -96,7 +93,7 @@
       <option name="presentableId" value="Default" />
       <updated>1773053219408</updated>
       <workItem from="1773053220854" duration="10326000" />
-      <workItem from="1773175472353" duration="1455000" />
+      <workItem from="1773175472353" duration="2153000" />
     </task>
     <task id="LOCAL-00001" summary="Add in spreadsheet UI">
       <option name="closed" value="true" />
@@ -106,7 +103,15 @@
       <option name="project" value="LOCAL" />
       <updated>1773175714051</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="seed data">
+      <option name="closed" value="true" />
+      <created>1773177565113</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1773177565113</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -114,6 +119,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Add in spreadsheet UI" />
-    <option name="LAST_COMMIT_MESSAGE" value="Add in spreadsheet UI" />
+    <MESSAGE value="seed data" />
+    <option name="LAST_COMMIT_MESSAGE" value="seed data" />
   </component>
 </project>

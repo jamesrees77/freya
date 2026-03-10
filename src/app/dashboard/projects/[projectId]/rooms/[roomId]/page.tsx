@@ -1,4 +1,5 @@
 import { getRoomWithLineItems } from "@/actions/rooms"
+import { getSuppliers } from "@/actions/suppliers"
 import { redirect } from "next/navigation"
 import { Spreadsheet } from "@/components/spreadsheet/spreadsheet"
 import type { SpreadsheetData } from "@/components/spreadsheet/types"
@@ -36,7 +37,10 @@ export default async function RoomPage({
 }) {
   const { projectId, roomId } = await params
 
-  const room = await getRoomWithLineItems(roomId)
+  const [room, suppliers] = await Promise.all([
+    getRoomWithLineItems(roomId),
+    getSuppliers(),
+  ])
 
   if (!room || room.projectId !== projectId) {
     redirect("/dashboard")
@@ -50,7 +54,7 @@ export default async function RoomPage({
         <h1 className="text-xl font-semibold tracking-tight">{data.roomName}</h1>
       </div>
       <div className="flex-1 overflow-auto p-6">
-        <Spreadsheet data={data} />
+        <Spreadsheet data={data} suppliers={suppliers} />
       </div>
     </div>
   )
