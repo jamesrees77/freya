@@ -5,26 +5,42 @@ import {
   SidebarContent,
   SidebarHeader,
   SidebarFooter,
-  SidebarMenu,
-  SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { ProjectTree } from "./project-tree"
+import { CreateProjectDialog } from "./create-project-dialog"
 
-export function AppSidebar() {
+type Room = {
+  id: string
+  name: string
+  sortOrder: number
+}
+
+type Area = {
+  id: string
+  name: string
+  sortOrder: number
+  rooms: Room[]
+}
+
+type Project = {
+  id: string
+  name: string
+  clientName: string | null
+  areas: Area[]
+  rooms: Room[]
+}
+
+export function AppSidebar({ projects }: { projects: Project[] }) {
   return (
     <Sidebar>
       <SidebarHeader>
-        <div className="flex items-center gap-2 px-2 py-1">
+        <div className="flex items-center justify-between px-2 py-1">
           <span className="text-lg font-semibold">Freya</span>
+          <CreateProjectDialog />
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <p className="px-4 py-2 text-sm text-muted-foreground">
-              No projects yet
-            </p>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <ProjectTree projects={projects} />
       </SidebarContent>
       <SidebarFooter />
     </Sidebar>
