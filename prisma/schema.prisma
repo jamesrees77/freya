@@ -7,3 +7,119 @@ datasource db {
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
+
+model User {
+  id         String    @id @default(cuid())
+  supabaseId String    @unique
+  email      String
+  name       String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  projects   Project[]
+  suppliers  Supplier[]
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  clientName  String?
+  status      ProjectStatus @default(ACTIVE)
+  sortOrder   Int           @default(0)
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  areas Area[]
+  rooms Room[]
+
+  @@index([userId])
+}
+
+enum ProjectStatus {
+  ACTIVE
+  ARCHIVED
+  COMPLETED
+}
+
+model Area {
+  id        String   @id @default(cuid())
+  name      String
+  sortOrder Int      @default(0)
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rooms Room[]
+
+  @@index([projectId, sortOrder])
+}
+
+model Room {
+  id        String   @id @default(cuid())
+  name      String
+  sortOrder Int      @default(0)
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  areaId    String?
+  area      Area?    @relation(fields: [areaId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lineItemGroups LineItemGroup[]
+
+  @@index([projectId, sortOrder])
+  @@index([areaId, sortOrder])
+}
+
+model Supplier {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lineItems LineItem[]
+
+  @@index([userId])
+}
+
+model LineItemGroup {
+  id        String   @id @default(cuid())
+  name      String
+  sortOrder Int      @default(0)
+  roomId    String
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lineItems LineItem[]
+
+  @@index([roomId, sortOrder])
+}
+
+model LineItem {
+  id            String   @id @default(cuid())
+  description   String   @default("")
+  quantity      Decimal  @default(1)    @db.Decimal(10, 2)
+  unit          String   @default("each")
+  unitCost      Decimal  @default(0)    @db.Decimal(10, 2)
+  markupPercent Decimal  @default(0)    @db.Decimal(5, 2)
+  sellPrice     Decimal  @default(0)    @db.Decimal(10, 2)
+  sortOrder     Int      @default(0)
+  groupId       String
+  group         LineItemGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  supplierId    String?
+  supplier      Supplier?     @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([groupId, sortOrder])
+  @@index([supplierId])
+}
