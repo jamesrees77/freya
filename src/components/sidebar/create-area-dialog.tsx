@@ -47,7 +47,7 @@ export function CreateAreaDialog({
           <DialogHeader>
             <DialogTitle>New Area</DialogTitle>
             <DialogDescription>
-              Areas group rooms together (e.g. "Ground Floor", "First Floor").
+              Areas group rooms together (e.g. &ldquo;Ground Floor&rdquo;, &ldquo;First Floor&rdquo;).
             </DialogDescription>
           </DialogHeader>
           <div className="mt-4 grid gap-4">

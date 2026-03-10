@@ -7,7 +7,6 @@ import {
   FolderIcon,
   LayoutGridIcon,
   DoorOpenIcon,
-  PlusIcon,
   Trash2Icon,
   MoreHorizontalIcon,
 } from "lucide-react"

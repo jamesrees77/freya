@@ -41,6 +41,34 @@ export async function createRoom(
   return room
 }
 
+export async function getRoomWithLineItems(roomId: string) {
+  const user = await getCurrentUser()
+
+  const room = await prisma.room.findUnique({
+    where: { id: roomId },
+    include: {
+      project: { select: { userId: true } },
+      lineItemGroups: {
+        orderBy: { sortOrder: "asc" },
+        include: {
+          lineItems: {
+            orderBy: { sortOrder: "asc" },
+            include: {
+              supplier: { select: { name: true } },
+            },
+          },
+        },
+      },
+    },
+  })
+
+  if (!room || room.project.userId !== user.id) {
+    return null
+  }
+
+  return room
+}
+
 export async function deleteRoom(id: string) {
   const user = await getCurrentUser()
 
