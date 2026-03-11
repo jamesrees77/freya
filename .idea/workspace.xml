@@ -4,22 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="50539268-beff-4a87-a376-b0a7542787a5" name="Changes" comment="add spreadsheet functionality">
-      <change beforePath="$PROJECT_DIR$/.claude/settings.local.json" beforeDir="false" afterPath="$PROJECT_DIR$/.claude/settings.local.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/dashboard/projects/[projectId]/rooms/[roomId]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/dashboard/projects/[projectId]/rooms/[roomId]/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/globals.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/globals.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/spreadsheet/columns.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/spreadsheet/spreadsheet-cell.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/spreadsheet/spreadsheet-cell.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/spreadsheet/spreadsheet-footer.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/spreadsheet/spreadsheet-footer.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/spreadsheet/spreadsheet-group-row.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/spreadsheet/spreadsheet-group-row.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/spreadsheet/spreadsheet-header.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/spreadsheet/spreadsheet-header.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/spreadsheet/spreadsheet-row.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/spreadsheet/spreadsheet-row.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/spreadsheet/spreadsheet.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/spreadsheet/spreadsheet.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/spreadsheet/types.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/spreadsheet/types.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/hooks/use-cell-navigation.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/hooks/use-cell-navigation.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/hooks/use-spreadsheet.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/hooks/use-spreadsheet.ts" afterDir="false" />
+    <list default="true" id="50539268-beff-4a87-a376-b0a7542787a5" name="Changes" comment="UX fixes for app">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/sidebar/project-tree.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/sidebar/project-tree.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -109,7 +96,7 @@
       <option name="presentableId" value="Default" />
       <updated>1773053219408</updated>
       <workItem from="1773053220854" duration="10326000" />
-      <workItem from="1773175472353" duration="3464000" />
+      <workItem from="1773175472353" duration="8991000" />
     </task>
     <task id="LOCAL-00001" summary="Add in spreadsheet UI">
       <option name="closed" value="true" />
@@ -135,7 +122,31 @@
       <option name="project" value="LOCAL" />
       <updated>1773179130238</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="fix spreadsheet styling">
+      <option name="closed" value="true" />
+      <created>1773222964665</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1773222964665</updated>
+    </task>
+    <task id="LOCAL-00005" summary="add / delete items &amp; groups update">
+      <option name="closed" value="true" />
+      <created>1773224967525</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1773224967525</updated>
+    </task>
+    <task id="LOCAL-00006" summary="UX fixes for app">
+      <option name="closed" value="true" />
+      <created>1773226395664</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1773226395664</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -145,6 +156,9 @@
     <MESSAGE value="Add in spreadsheet UI" />
     <MESSAGE value="seed data" />
     <MESSAGE value="add spreadsheet functionality" />
-    <option name="LAST_COMMIT_MESSAGE" value="add spreadsheet functionality" />
+    <MESSAGE value="fix spreadsheet styling" />
+    <MESSAGE value="add / delete items &amp; groups update" />
+    <MESSAGE value="UX fixes for app" />
+    <option name="LAST_COMMIT_MESSAGE" value="UX fixes for app" />
   </component>
 </project>
