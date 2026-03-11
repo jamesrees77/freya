@@ -12,11 +12,13 @@ export function SpreadsheetFooter({ groups }: SpreadsheetFooterProps) {
 
   return (
     <tfoot>
-      <tr className="border-t-2 border-border bg-muted">
-        <td colSpan={7} className="h-11 px-3 text-sm font-semibold">
+      <tr className="bg-gray-100">
+        {/* Gutter column */}
+        <td className="h-6 border border-gray-200 bg-gray-100" />
+        <td colSpan={7} className="h-6 px-1.5 text-[13px] font-semibold border border-gray-200">
           Room Total
         </td>
-        <td className="h-11 px-3 text-right text-sm font-bold tabular-nums">
+        <td className="h-6 px-1.5 text-right text-[13px] font-bold tabular-nums border border-gray-200">
           {formatCurrency(roomTotal)}
         </td>
       </tr>

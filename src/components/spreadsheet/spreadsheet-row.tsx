@@ -14,7 +14,6 @@ interface SupplierOption {
 
 interface SpreadsheetRowProps {
   item: SpreadsheetLineItem
-  isEven: boolean
   activeCell: CellAddress | null
   isEditing: boolean
   editValue: string
@@ -25,6 +24,10 @@ interface SpreadsheetRowProps {
   onCommitEdit: () => void
   suppliers: SupplierOption[]
   onSupplierSelect: (itemId: string, supplierId: string | null, supplierName: string | null) => void
+  isCellSelected?: (rowId: string, columnId: string) => boolean
+  onExtendSelection?: (cell: CellAddress) => void
+  onStartDragSelection?: (cell: CellAddress) => void
+  onUpdateDragSelection?: (cell: CellAddress) => void
 }
 
 interface CellConfig {
@@ -46,7 +49,6 @@ const CELL_CONFIGS: CellConfig[] = [
 
 export const SpreadsheetRow = memo(function SpreadsheetRow({
   item,
-  isEven,
   activeCell,
   isEditing,
   editValue,
@@ -57,17 +59,17 @@ export const SpreadsheetRow = memo(function SpreadsheetRow({
   onCommitEdit,
   suppliers,
   onSupplierSelect,
+  isCellSelected,
+  onExtendSelection,
+  onStartDragSelection,
+  onUpdateDragSelection,
 }: SpreadsheetRowProps) {
   const lineTotal = calculateLineTotal(item.quantity, item.sellPrice)
 
   return (
-    <tr
-      className={
-        isEven
-          ? "border-b border-border bg-background"
-          : "border-b border-border bg-muted/10"
-      }
-    >
+    <tr className="bg-white">
+      {/* Gutter column */}
+      <td className="h-6 w-7 border border-gray-200 bg-gray-50" />
       {CELL_CONFIGS.map((config) => {
         const isCellActive =
           activeCell?.rowId === item.id &&
@@ -87,6 +89,7 @@ export const SpreadsheetRow = memo(function SpreadsheetRow({
             align={config.align}
             isActive={isCellActive}
             isEditing={isCellEditing}
+            isSelected={isCellSelected?.(item.id, config.columnId) ?? false}
             editValue={isCellEditing ? editValue : rawValue}
             onSelect={() =>
               onSelectCell({ rowId: item.id, columnId: config.columnId })
@@ -95,6 +98,21 @@ export const SpreadsheetRow = memo(function SpreadsheetRow({
             onEditValueChange={onEditValueChange}
             onKeyDown={onCellInputKeyDown}
             onCommit={onCommitEdit}
+            onExtendSelection={
+              onExtendSelection
+                ? () => onExtendSelection({ rowId: item.id, columnId: config.columnId })
+                : undefined
+            }
+            onStartDragSelection={
+              onStartDragSelection
+                ? () => onStartDragSelection({ rowId: item.id, columnId: config.columnId })
+                : undefined
+            }
+            onUpdateDragSelection={
+              onUpdateDragSelection
+                ? () => onUpdateDragSelection({ rowId: item.id, columnId: config.columnId })
+                : undefined
+            }
             suppliers={config.type === "supplier-dropdown" ? suppliers : undefined}
             onSupplierSelect={
               config.type === "supplier-dropdown"
@@ -106,9 +124,7 @@ export const SpreadsheetRow = memo(function SpreadsheetRow({
         )
       })}
       {/* Total column — NOT editable */}
-      <td
-        className="h-9 px-3 text-right text-sm font-medium tabular-nums"
-      >
+      <td className="h-6 px-1.5 text-right text-[13px] font-medium tabular-nums leading-6 border border-gray-200 bg-gray-50">
         {formatCurrency(lineTotal)}
       </td>
     </tr>

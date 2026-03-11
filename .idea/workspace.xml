@@ -4,7 +4,23 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="50539268-beff-4a87-a376-b0a7542787a5" name="Changes" comment="seed data" />
+    <list default="true" id="50539268-beff-4a87-a376-b0a7542787a5" name="Changes" comment="add spreadsheet functionality">
+      <change beforePath="$PROJECT_DIR$/.claude/settings.local.json" beforeDir="false" afterPath="$PROJECT_DIR$/.claude/settings.local.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/dashboard/projects/[projectId]/rooms/[roomId]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/dashboard/projects/[projectId]/rooms/[roomId]/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/globals.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/globals.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/spreadsheet/columns.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/spreadsheet/spreadsheet-cell.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/spreadsheet/spreadsheet-cell.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/spreadsheet/spreadsheet-footer.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/spreadsheet/spreadsheet-footer.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/spreadsheet/spreadsheet-group-row.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/spreadsheet/spreadsheet-group-row.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/spreadsheet/spreadsheet-header.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/spreadsheet/spreadsheet-header.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/spreadsheet/spreadsheet-row.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/spreadsheet/spreadsheet-row.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/spreadsheet/spreadsheet.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/spreadsheet/spreadsheet.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/spreadsheet/types.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/spreadsheet/types.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/hooks/use-cell-navigation.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/hooks/use-cell-navigation.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/hooks/use-spreadsheet.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/hooks/use-spreadsheet.ts" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -93,7 +109,7 @@
       <option name="presentableId" value="Default" />
       <updated>1773053219408</updated>
       <workItem from="1773053220854" duration="10326000" />
-      <workItem from="1773175472353" duration="2153000" />
+      <workItem from="1773175472353" duration="3464000" />
     </task>
     <task id="LOCAL-00001" summary="Add in spreadsheet UI">
       <option name="closed" value="true" />
@@ -111,7 +127,15 @@
       <option name="project" value="LOCAL" />
       <updated>1773177565113</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="add spreadsheet functionality">
+      <option name="closed" value="true" />
+      <created>1773179130238</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1773179130238</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -120,6 +144,7 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Add in spreadsheet UI" />
     <MESSAGE value="seed data" />
-    <option name="LAST_COMMIT_MESSAGE" value="seed data" />
+    <MESSAGE value="add spreadsheet functionality" />
+    <option name="LAST_COMMIT_MESSAGE" value="add spreadsheet functionality" />
   </component>
 </project>

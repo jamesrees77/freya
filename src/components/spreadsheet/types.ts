@@ -27,11 +27,6 @@ export interface SpreadsheetData {
   groups: SpreadsheetGroup[]
 }
 
-// Row type for TanStack Table — a group header or a line item
-export type SpreadsheetRow =
-  | { type: "group"; group: SpreadsheetGroup }
-  | { type: "item"; item: SpreadsheetLineItem; groupId: string }
-
 // Prisma returns Decimals — this is what we get from the DB before converting
 export interface RawLineItem {
   id: string

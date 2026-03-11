@@ -1,27 +1,29 @@
 "use client"
 
 const COLUMNS = [
-  { id: "description", label: "Description", align: "left" as const, width: "flex" },
-  { id: "supplier", label: "Supplier", align: "left" as const, width: "140px" },
-  { id: "quantity", label: "Qty", align: "right" as const, width: "70px" },
-  { id: "unit", label: "Unit", align: "left" as const, width: "70px" },
-  { id: "unitCost", label: "Unit Cost", align: "right" as const, width: "100px" },
-  { id: "markupPercent", label: "Markup %", align: "right" as const, width: "80px" },
-  { id: "sellPrice", label: "Sell Price", align: "right" as const, width: "100px" },
-  { id: "total", label: "Total", align: "right" as const, width: "100px" },
+  { id: "description", label: "Description", align: "left" as const, minWidth: 200 },
+  { id: "supplier", label: "Supplier", align: "left" as const, minWidth: 120 },
+  { id: "quantity", label: "Qty", align: "right" as const, minWidth: 60 },
+  { id: "unit", label: "Unit", align: "left" as const, minWidth: 60 },
+  { id: "unitCost", label: "Unit Cost", align: "right" as const, minWidth: 90 },
+  { id: "markupPercent", label: "Markup %", align: "right" as const, minWidth: 80 },
+  { id: "sellPrice", label: "Sell Price", align: "right" as const, minWidth: 90 },
+  { id: "total", label: "Total", align: "right" as const, minWidth: 90 },
 ]
 
 export function SpreadsheetHeader() {
   return (
-    <thead className="sticky top-0 z-10">
-      <tr className="border-b-2 border-border bg-muted">
+    <thead className="sticky top-0 z-20">
+      <tr className="bg-[#f3f3f3]">
+        {/* Gutter column */}
+        <th className="h-6 w-7 border border-gray-200 bg-[#f3f3f3]" />
         {COLUMNS.map((col) => (
           <th
             key={col.id}
-            className={`h-10 px-3 text-xs font-medium uppercase tracking-wider text-muted-foreground ${
+            className={`h-6 px-1.5 text-xs font-medium text-gray-600 border border-gray-200 select-none ${
               col.align === "right" ? "text-right" : "text-left"
             }`}
-            style={{ width: col.width === "flex" ? undefined : col.width }}
+            style={{ minWidth: col.minWidth }}
           >
             {col.label}
           </th>

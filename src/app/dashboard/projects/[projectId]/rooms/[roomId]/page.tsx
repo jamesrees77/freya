@@ -53,7 +53,7 @@ export default async function RoomPage({
       <div className="flex items-center justify-between border-b border-border px-6 py-4">
         <h1 className="text-xl font-semibold tracking-tight">{data.roomName}</h1>
       </div>
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto">
         <Spreadsheet data={data} suppliers={suppliers} />
       </div>
     </div>

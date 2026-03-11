@@ -19,14 +19,22 @@ export const EDITABLE_COLUMNS = [
 
 export type EditableColumn = (typeof EDITABLE_COLUMNS)[number]
 
-const NUMERIC_FIELDS = new Set(["quantity", "unitCost", "markupPercent", "sellPrice"])
-
 interface UseCellNavigationProps {
   visibleRowIds: string[]
   onCommit: (cell: CellAddress, rawValue: string) => void
   onClearCell: (cell: CellAddress) => void
   getCellRawValue: (cell: CellAddress) => string
   containerRef: React.RefObject<HTMLDivElement | null>
+  // Undo/redo
+  onUndo?: () => void
+  onRedo?: () => void
+  // Copy/paste
+  onCopy?: () => void
+  onPaste?: () => void
+  onCut?: () => void
+  // Selection
+  onExtendSelection?: (direction: "up" | "down" | "left" | "right") => void
+  onClearSelection?: () => void
 }
 
 export function useCellNavigation({
@@ -35,6 +43,13 @@ export function useCellNavigation({
   onClearCell,
   getCellRawValue,
   containerRef,
+  onUndo,
+  onRedo,
+  onCopy,
+  onPaste,
+  onCut,
+  onExtendSelection,
+  onClearSelection,
 }: UseCellNavigationProps) {
   const [activeCell, setActiveCell] = useState<CellAddress | null>(null)
   const [isEditing, setIsEditing] = useState(false)
@@ -42,7 +57,6 @@ export function useCellNavigation({
   const previousValueRef = useRef("")
 
   const focusContainer = useCallback(() => {
-    // Delay to let React finish rendering before focusing
     requestAnimationFrame(() => {
       containerRef.current?.focus()
     })
@@ -50,16 +64,16 @@ export function useCellNavigation({
 
   const selectCell = useCallback(
     (cell: CellAddress) => {
-      // If currently editing, commit first
       if (isEditing && activeCell) {
         onCommit(activeCell, editValue)
       }
       setActiveCell(cell)
       setIsEditing(false)
       setEditValue("")
+      onClearSelection?.()
       focusContainer()
     },
-    [isEditing, activeCell, editValue, onCommit, focusContainer]
+    [isEditing, activeCell, editValue, onCommit, focusContainer, onClearSelection]
   )
 
   const startEditing = useCallback(
@@ -72,8 +86,9 @@ export function useCellNavigation({
       previousValueRef.current = getCellRawValue(activeCell)
       setEditValue(raw)
       setIsEditing(true)
+      onClearSelection?.()
     },
-    [activeCell, getCellRawValue]
+    [activeCell, getCellRawValue, onClearSelection]
   )
 
   const commitEdit = useCallback(() => {
@@ -90,17 +105,12 @@ export function useCellNavigation({
     focusContainer()
   }, [focusContainer])
 
-  // Move to an adjacent cell. Returns the new cell if moved, null if at boundary.
   const moveCell = useCallback(
-    (
-      direction: "up" | "down" | "left" | "right"
-    ): CellAddress | null => {
+    (direction: "up" | "down" | "left" | "right"): CellAddress | null => {
       if (!activeCell) return null
 
       const rowIdx = visibleRowIds.indexOf(activeCell.rowId)
-      const colIdx = EDITABLE_COLUMNS.indexOf(
-        activeCell.columnId as EditableColumn
-      )
+      const colIdx = EDITABLE_COLUMNS.indexOf(activeCell.columnId as EditableColumn)
       if (rowIdx === -1 || colIdx === -1) return null
 
       let newRowIdx = rowIdx
@@ -133,15 +143,12 @@ export function useCellNavigation({
     [activeCell, visibleRowIds]
   )
 
-  // Tab navigation: move right, wrapping to next row
   const moveTab = useCallback(
     (reverse: boolean) => {
       if (!activeCell) return
 
       const rowIdx = visibleRowIds.indexOf(activeCell.rowId)
-      const colIdx = EDITABLE_COLUMNS.indexOf(
-        activeCell.columnId as EditableColumn
-      )
+      const colIdx = EDITABLE_COLUMNS.indexOf(activeCell.columnId as EditableColumn)
       if (rowIdx === -1 || colIdx === -1) return
 
       let newRowIdx = rowIdx
@@ -172,31 +179,90 @@ export function useCellNavigation({
     [activeCell, visibleRowIds]
   )
 
-  // Handler for keyboard events on the spreadsheet container (when NOT editing)
+  // Handler for keyboard events on the spreadsheet container
   const handleContainerKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
+      // Ctrl/Cmd shortcuts — work even when editing (for undo/redo)
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key.toLowerCase()) {
+          case "z":
+            e.preventDefault()
+            if (isEditing) commitEdit()
+            if (e.shiftKey) {
+              onRedo?.()
+            } else {
+              onUndo?.()
+            }
+            return
+          case "y":
+            e.preventDefault()
+            if (isEditing) commitEdit()
+            onRedo?.()
+            return
+          case "c":
+            if (!isEditing) {
+              e.preventDefault()
+              onCopy?.()
+            }
+            return
+          case "v":
+            if (!isEditing) {
+              e.preventDefault()
+              onPaste?.()
+            }
+            return
+          case "x":
+            if (!isEditing) {
+              e.preventDefault()
+              onCut?.()
+            }
+            return
+        }
+      }
+
       if (isEditing) return
       if (!activeCell) return
 
       switch (e.key) {
         case "ArrowUp":
           e.preventDefault()
-          moveCell("up")
+          if (e.shiftKey) {
+            onExtendSelection?.("up")
+          } else {
+            onClearSelection?.()
+            moveCell("up")
+          }
           break
         case "ArrowDown":
           e.preventDefault()
-          moveCell("down")
+          if (e.shiftKey) {
+            onExtendSelection?.("down")
+          } else {
+            onClearSelection?.()
+            moveCell("down")
+          }
           break
         case "ArrowLeft":
           e.preventDefault()
-          moveCell("left")
+          if (e.shiftKey) {
+            onExtendSelection?.("left")
+          } else {
+            onClearSelection?.()
+            moveCell("left")
+          }
           break
         case "ArrowRight":
           e.preventDefault()
-          moveCell("right")
+          if (e.shiftKey) {
+            onExtendSelection?.("right")
+          } else {
+            onClearSelection?.()
+            moveCell("right")
+          }
           break
         case "Tab":
           e.preventDefault()
+          onClearSelection?.()
           moveTab(e.shiftKey)
           break
         case "Enter":
@@ -215,15 +281,10 @@ export function useCellNavigation({
         case "Escape":
           e.preventDefault()
           setActiveCell(null)
+          onClearSelection?.()
           break
         default: {
-          // Printable character → enter edit mode with that character
-          if (
-            e.key.length === 1 &&
-            !e.ctrlKey &&
-            !e.metaKey &&
-            !e.altKey
-          ) {
+          if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
             e.preventDefault()
             startEditing(e.key)
           }
@@ -231,7 +292,22 @@ export function useCellNavigation({
         }
       }
     },
-    [isEditing, activeCell, moveCell, moveTab, startEditing, onClearCell]
+    [
+      isEditing,
+      activeCell,
+      moveCell,
+      moveTab,
+      startEditing,
+      commitEdit,
+      onClearCell,
+      onUndo,
+      onRedo,
+      onCopy,
+      onPaste,
+      onCut,
+      onExtendSelection,
+      onClearSelection,
+    ]
   )
 
   // Handler for keyboard events on the cell input (when editing)
@@ -266,6 +342,7 @@ export function useCellNavigation({
 
   return {
     activeCell,
+    setActiveCell,
     isEditing,
     editValue,
     setEditValue,

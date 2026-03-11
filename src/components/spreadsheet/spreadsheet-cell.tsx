@@ -18,12 +18,16 @@ interface SpreadsheetCellProps {
   align?: "left" | "right"
   isActive: boolean
   isEditing: boolean
+  isSelected?: boolean
   editValue: string
   onSelect: () => void
   onStartEditing: () => void
   onEditValueChange: (value: string) => void
   onKeyDown: (e: React.KeyboardEvent) => void
   onCommit: () => void
+  onExtendSelection?: () => void
+  onStartDragSelection?: () => void
+  onUpdateDragSelection?: () => void
   // Dropdown options
   suppliers?: SupplierOption[]
   onSupplierSelect?: (supplierId: string | null, supplierName: string | null) => void
@@ -51,6 +55,11 @@ function getRawEditValue(value: string | number, type: CellType): string {
   return String(value ?? "")
 }
 
+// Base cell classes shared across all states
+const BASE_CELL = "relative h-6 p-0 text-[13px] leading-6 border border-gray-200"
+const ACTIVE_OUTLINE = "outline outline-2 outline-blue-600 -outline-offset-1 z-10"
+const SELECTED_BG = "bg-[#d4e4fc]"
+
 export function SpreadsheetCell({
   value,
   columnId,
@@ -58,12 +67,16 @@ export function SpreadsheetCell({
   align = "left",
   isActive,
   isEditing,
+  isSelected = false,
   editValue,
   onSelect,
   onStartEditing,
   onEditValueChange,
   onKeyDown,
   onCommit,
+  onExtendSelection,
+  onStartDragSelection,
+  onUpdateDragSelection,
   suppliers,
   onSupplierSelect,
 }: SpreadsheetCellProps) {
@@ -84,7 +97,6 @@ export function SpreadsheetCell({
         setShowSupplierDropdown(true)
       } else {
         inputRef.current?.focus()
-        // Select all text so typing replaces it
         inputRef.current?.select()
       }
     } else {
@@ -104,11 +116,27 @@ export function SpreadsheetCell({
     return () => document.removeEventListener("mousedown", handleClick)
   }, [showSupplierDropdown])
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
+    if (e.shiftKey && onExtendSelection) {
+      onExtendSelection()
+      return
+    }
     if (!isActive) {
       onSelect()
     } else if (!isEditing) {
       onStartEditing()
+    }
+  }
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!e.shiftKey && onStartDragSelection) {
+      onStartDragSelection()
+    }
+  }
+
+  const handleMouseEnter = (e: React.MouseEvent) => {
+    if (e.buttons === 1 && onUpdateDragSelection) {
+      onUpdateDragSelection()
     }
   }
 
@@ -121,7 +149,6 @@ export function SpreadsheetCell({
 
   const handleBlur = () => {
     if (isEditing) {
-      // Small delay to allow dropdown clicks to register
       setTimeout(() => {
         if (type === "supplier-dropdown" && showSupplierDropdown) return
         onCommit()
@@ -131,26 +158,25 @@ export function SpreadsheetCell({
 
   const displayValue = formatDisplayValue(value, type)
 
+  const inputClasses = cn(
+    "h-full w-full border-0 bg-transparent px-1.5 text-[13px] leading-6 tabular-nums outline-none",
+    align === "right" && "text-right"
+  )
+
   // --- UNIT DROPDOWN ---
   if (isEditing && type === "unit-dropdown") {
     return (
-      <td
-        className={cn(
-          "relative h-9 p-0",
-          "ring-2 ring-inset ring-primary bg-background"
-        )}
-      >
+      <td className={cn(BASE_CELL, ACTIVE_OUTLINE)}>
         <select
           ref={selectRef}
           value={editValue}
           onChange={(e) => {
             onEditValueChange(e.target.value)
-            // Commit immediately on select
             setTimeout(() => onCommit(), 0)
           }}
           onKeyDown={onKeyDown}
           onBlur={handleBlur}
-          className="h-full w-full border-0 bg-transparent px-3 text-sm outline-none"
+          className="h-full w-full border-0 bg-transparent px-1 text-[13px] leading-6 outline-none"
         >
           {UNIT_OPTIONS.map((unit) => (
             <option key={unit} value={unit}>
@@ -169,13 +195,7 @@ export function SpreadsheetCell({
     )
 
     return (
-      <td
-        className={cn(
-          "relative h-9 p-0",
-          "ring-2 ring-inset ring-primary bg-background"
-        )}
-        ref={dropdownRef}
-      >
+      <td className={cn(BASE_CELL, ACTIVE_OUTLINE)} ref={dropdownRef}>
         <input
           ref={inputRef}
           type="text"
@@ -197,18 +217,18 @@ export function SpreadsheetCell({
             onKeyDown(e)
           }}
           onBlur={handleBlur}
-          placeholder="Search supplier..."
-          className="h-full w-full border-0 bg-transparent px-3 text-sm outline-none"
+          placeholder="Search..."
+          className={inputClasses}
         />
         {showSupplierDropdown && filteredSuppliers.length > 0 && (
-          <div className="absolute left-0 top-full z-50 mt-px max-h-40 w-56 overflow-auto rounded-md border border-border bg-popover shadow-md">
+          <div className="absolute left-0 top-full z-50 mt-px max-h-40 w-56 overflow-auto border border-gray-300 bg-white shadow-sm">
             {filteredSuppliers.map((supplier) => (
               <button
                 key={supplier.id}
                 type="button"
-                className="flex w-full items-center px-3 py-1.5 text-left text-sm hover:bg-muted"
+                className="flex w-full items-center px-2 py-1 text-left text-[13px] hover:bg-blue-50"
                 onMouseDown={(e) => {
-                  e.preventDefault() // Prevent blur
+                  e.preventDefault()
                   onSupplierSelect?.(supplier.id, supplier.name)
                   setShowSupplierDropdown(false)
                 }}
@@ -219,8 +239,8 @@ export function SpreadsheetCell({
           </div>
         )}
         {showSupplierDropdown && editValue && filteredSuppliers.length === 0 && (
-          <div className="absolute left-0 top-full z-50 mt-px w-56 rounded-md border border-border bg-popover p-2 shadow-md">
-            <p className="text-xs text-muted-foreground">No matching suppliers</p>
+          <div className="absolute left-0 top-full z-50 mt-px w-56 border border-gray-300 bg-white p-2 shadow-sm">
+            <p className="text-xs text-gray-400">No matching suppliers</p>
           </div>
         )}
       </td>
@@ -230,24 +250,16 @@ export function SpreadsheetCell({
   // --- EDITING MODE (text / number / currency / percentage) ---
   if (isEditing) {
     return (
-      <td
-        className={cn(
-          "relative h-9 p-0",
-          "ring-2 ring-inset ring-primary bg-background"
-        )}
-      >
+      <td className={cn(BASE_CELL, ACTIVE_OUTLINE)}>
         <input
           ref={inputRef}
-          type={type === "text" ? "text" : "text"} // Use text type for all — we handle parsing
+          type="text"
           inputMode={type === "text" ? "text" : "decimal"}
           value={editValue}
           onChange={(e) => onEditValueChange(e.target.value)}
           onKeyDown={onKeyDown}
           onBlur={handleBlur}
-          className={cn(
-            "h-full w-full border-0 bg-transparent px-3 text-sm tabular-nums outline-none",
-            align === "right" && "text-right"
-          )}
+          className={inputClasses}
         />
       </td>
     )
@@ -257,19 +269,21 @@ export function SpreadsheetCell({
   return (
     <td
       className={cn(
-        "relative h-9 cursor-cell select-none px-3 text-sm",
+        BASE_CELL,
+        "cursor-cell select-none px-1.5 truncate",
         align === "right" && "text-right tabular-nums",
-        isActive
-          ? "ring-2 ring-inset ring-primary bg-primary/5"
-          : "hover:bg-muted/40"
+        isActive && ACTIVE_OUTLINE,
+        isSelected && !isActive && SELECTED_BG,
       )}
       onClick={handleClick}
+      onMouseDown={handleMouseDown}
+      onMouseEnter={handleMouseEnter}
       onDoubleClick={handleDoubleClick}
     >
       {type === "text" && !displayValue ? (
-        <span className="text-muted-foreground italic">No description</span>
+        <span className="text-gray-400 italic">No description</span>
       ) : type === "supplier-dropdown" && !displayValue ? (
-        <span className="text-muted-foreground">&mdash;</span>
+        <span className="text-gray-300">&mdash;</span>
       ) : (
         displayValue
       )}

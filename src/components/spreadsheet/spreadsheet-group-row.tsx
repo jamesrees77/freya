@@ -1,9 +1,7 @@
 "use client"
 
-import { ChevronRight } from "lucide-react"
 import type { SpreadsheetGroup } from "./types"
 import { calculateGroupTotal, formatCurrency } from "@/lib/calculations"
-import { cn } from "@/lib/utils"
 
 interface SpreadsheetGroupRowProps {
   group: SpreadsheetGroup
@@ -22,27 +20,28 @@ export function SpreadsheetGroupRow({
 
   return (
     <tr
-      className="group cursor-pointer border-b border-border bg-muted/50 hover:bg-muted/80"
+      className="cursor-pointer bg-gray-50 hover:bg-gray-100"
       onClick={onToggle}
     >
-      <td
-        colSpan={columnCount - 1}
-        className="h-10 px-3 text-sm font-semibold"
-      >
-        <div className="flex items-center gap-2">
-          <ChevronRight
-            className={cn(
-              "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200",
-              isExpanded && "rotate-90"
-            )}
-          />
-          <span>{group.name}</span>
-          <span className="text-xs text-muted-foreground">
-            ({group.items.length} {group.items.length === 1 ? "item" : "items"})
-          </span>
-        </div>
+      {/* Gutter cell with +/- toggle */}
+      <td className="h-6 w-7 border border-gray-200 bg-gray-50 text-center">
+        <button
+          type="button"
+          className="text-[11px] font-medium leading-none text-gray-500"
+        >
+          {isExpanded ? "−" : "+"}
+        </button>
       </td>
-      <td className="h-10 px-3 text-right text-sm font-semibold">
+      <td
+        colSpan={columnCount - 2}
+        className="h-6 px-1.5 text-[13px] font-semibold border border-gray-200"
+      >
+        {group.name}
+        <span className="ml-2 text-[11px] text-gray-400 font-normal">
+          ({group.items.length} {group.items.length === 1 ? "item" : "items"})
+        </span>
+      </td>
+      <td className="h-6 px-1.5 text-right text-[13px] font-semibold tabular-nums border border-gray-200">
         {formatCurrency(groupTotal)}
       </td>
     </tr>

@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(npx create-next-app@latest freya --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --use-npm --no-turbopack 2>&1)",
-      "Bash(git init:*)"
+      "Bash(git init:*)",
+      "WebSearch"
     ]
   }
 }

@@ -1,1 +1,6 @@
 @import "tailwindcss";
+
+/* Spreadsheet container — no outline flash on focus */
+.spreadsheet-container:focus {
+  outline: none;
+}
