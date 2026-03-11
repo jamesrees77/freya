@@ -7,7 +7,6 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar"
 import { ProjectTree } from "./project-tree"
-import { CreateProjectDialog } from "./create-project-dialog"
 
 type Room = {
   id: string
@@ -34,9 +33,8 @@ export function AppSidebar({ projects }: { projects: Project[] }) {
   return (
     <Sidebar>
       <SidebarHeader>
-        <div className="flex items-center justify-between px-2 py-1">
-          <span className="text-lg font-semibold">Freya</span>
-          <CreateProjectDialog />
+        <div className="px-3 py-2">
+          <span className="text-base font-semibold tracking-tight">Freya</span>
         </div>
       </SidebarHeader>
       <SidebarContent>

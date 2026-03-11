@@ -5,10 +5,12 @@ import { useRouter, usePathname } from "next/navigation"
 import {
   ChevronRightIcon,
   FolderIcon,
+  FolderOpenIcon,
   LayoutGridIcon,
   DoorOpenIcon,
   Trash2Icon,
   MoreHorizontalIcon,
+  PlusIcon,
 } from "lucide-react"
 import {
   Collapsible,
@@ -17,6 +19,7 @@ import {
 } from "@/components/ui/collapsible"
 import {
   SidebarGroup,
+  SidebarGroupAction,
   SidebarGroupLabel,
   SidebarGroupContent,
   SidebarMenu,
@@ -44,6 +47,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { CreateProjectDialog } from "./create-project-dialog"
 import { CreateAreaDialog } from "./create-area-dialog"
 import { CreateRoomDialog } from "./create-room-dialog"
 import { deleteProject } from "@/actions/projects"
@@ -72,40 +76,56 @@ type Project = {
   rooms: Room[]
 }
 
+// ─── Root ────────────────────────────────────────────────────────────────────
+
 export function ProjectTree({ projects }: { projects: Project[] }) {
   const pathname = usePathname()
-
-  if (projects.length === 0) {
-    return (
-      <SidebarGroup>
-        <SidebarGroupContent>
-          <p className="px-3 py-2 text-xs text-sidebar-foreground/50">
-            No projects yet
-          </p>
-        </SidebarGroupContent>
-      </SidebarGroup>
-    )
-  }
+  const [createProjectOpen, setCreateProjectOpen] = useState(false)
 
   return (
-    <SidebarGroup>
-      <SidebarGroupLabel>Projects</SidebarGroupLabel>
-      <SidebarGroupContent>
-        <SidebarMenu>
-          {projects.map((project) => (
-            <ProjectItem
-              key={project.id}
-              project={project}
-              pathname={pathname}
-            />
-          ))}
-        </SidebarMenu>
-      </SidebarGroupContent>
-    </SidebarGroup>
+    <>
+      <SidebarGroup>
+        <SidebarGroupLabel>Projects</SidebarGroupLabel>
+
+        {/* "+" button pinned to the top-right of the group label row */}
+        <SidebarGroupAction
+          title="New project"
+          onClick={() => setCreateProjectOpen(true)}
+          className="cursor-pointer"
+        >
+          <PlusIcon />
+          <span className="sr-only">New project</span>
+        </SidebarGroupAction>
+
+        <SidebarGroupContent>
+          {projects.length === 0 ? (
+            <p className="px-3 py-3 text-xs italic text-sidebar-foreground/40">
+              No projects yet — create one to get&nbsp;started.
+            </p>
+          ) : (
+            <SidebarMenu>
+              {projects.map((project) => (
+                <ProjectItem
+                  key={project.id}
+                  project={project}
+                  pathname={pathname}
+                />
+              ))}
+            </SidebarMenu>
+          )}
+        </SidebarGroupContent>
+      </SidebarGroup>
+
+      {/* Dialog is controlled here so the trigger can live in SidebarGroupAction */}
+      <CreateProjectDialog
+        open={createProjectOpen}
+        onOpenChange={setCreateProjectOpen}
+      />
+    </>
   )
 }
 
-// ─── Project ────────────────────────────────────────────────────────────────
+// ─── Project row ─────────────────────────────────────────────────────────────
 
 function ProjectItem({
   project,
@@ -121,8 +141,7 @@ function ProjectItem({
   const [deleting, setDeleting] = useState(false)
 
   const isActive = pathname.startsWith(`/dashboard/projects/${project.id}`)
-  const hasChildren =
-    project.areas.length > 0 || project.rooms.length > 0
+  const hasChildren = project.areas.length > 0 || project.rooms.length > 0
 
   async function handleDelete() {
     setDeleting(true)
@@ -137,14 +156,18 @@ function ProjectItem({
 
   return (
     <>
-      {/* group/collapsible is required so the chevron rotation selector works */}
+      {/*
+        group/collapsible is the key fix: Base UI sets data-open on this element
+        when expanded, and the chevron reads group-data-[open]/collapsible:rotate-90
+      */}
       <Collapsible className="group/collapsible" defaultOpen={isActive}>
         <SidebarMenuItem>
           <CollapsibleTrigger
             render={
               <SidebarMenuButton
                 className={cn(
-                  project.clientName ? "h-auto min-h-8 items-start py-1.5" : ""
+                  "font-medium",
+                  project.clientName && "h-auto min-h-8 items-start py-1.5"
                 )}
                 onClick={() =>
                   router.push(`/dashboard/projects/${project.id}`)
@@ -152,31 +175,45 @@ function ProjectItem({
               />
             }
           >
-            {/* Chevron: only show when there are children to expand */}
-            {hasChildren ? (
-              <ChevronRightIcon className="mt-0.5 size-3.5 shrink-0 text-sidebar-foreground/50 transition-transform duration-200 group-data-[open]/collapsible:rotate-90" />
-            ) : (
-              <span className="size-3.5 shrink-0" />
-            )}
-
-            <FolderIcon
+            {/* Chevron — rotates when open. Hidden (invisible, not removed) when no children
+                so the folder icon stays aligned across all rows. */}
+            <ChevronRightIcon
               className={cn(
-                "shrink-0",
-                project.clientName ? "mt-0.5" : ""
+                "shrink-0 text-sidebar-foreground/30 transition-transform duration-200",
+                "group-data-[open]/collapsible:rotate-90",
+                project.clientName && "mt-0.5",
+                !hasChildren && "invisible"
               )}
             />
 
+            {/* Folder: closed when collapsed, open when expanded */}
+            <FolderIcon
+              className={cn(
+                "shrink-0 text-sidebar-foreground/60",
+                "group-data-[open]/collapsible:hidden",
+                project.clientName && "mt-0.5"
+              )}
+            />
+            <FolderOpenIcon
+              className={cn(
+                "hidden shrink-0 text-sidebar-foreground/60",
+                "group-data-[open]/collapsible:block",
+                project.clientName && "mt-0.5"
+              )}
+            />
+
+            {/* Name + optional client subtitle */}
             <div className="flex min-w-0 flex-col">
               <span className="truncate leading-snug">{project.name}</span>
               {project.clientName && (
-                <span className="truncate text-[11px] leading-snug text-sidebar-foreground/50 font-normal">
+                <span className="truncate text-[11px] font-normal leading-tight text-sidebar-foreground/45">
                   {project.clientName}
                 </span>
               )}
             </div>
           </CollapsibleTrigger>
 
-          {/* Actions: add room / add area / delete */}
+          {/* ··· context menu — appears on hover */}
           <DropdownMenu>
             <DropdownMenuTrigger render={<SidebarMenuAction showOnHover />}>
               <MoreHorizontalIcon />
@@ -201,7 +238,7 @@ function ProjectItem({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Children: areas and standalone rooms */}
+          {/* Children: areas first, then top-level rooms */}
           {hasChildren && (
             <CollapsibleContent>
               <SidebarMenuSub>
@@ -241,7 +278,7 @@ function ProjectItem({
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
         title="Delete project?"
-        description={`This will permanently delete "${project.name}" and all its areas, rooms, and line items. This cannot be undone.`}
+        description={`Permanently delete "${project.name}" and all its areas, rooms, and line items? This cannot be undone.`}
         onConfirm={handleDelete}
         loading={deleting}
       />
@@ -249,7 +286,7 @@ function ProjectItem({
   )
 }
 
-// ─── Area ───────────────────────────────────────────────────────────────────
+// ─── Area row (collapsible) ───────────────────────────────────────────────────
 
 function AreaItem({
   area,
@@ -281,39 +318,52 @@ function AreaItem({
 
   return (
     <>
-      {/* SidebarMenuSubItem provides group/menu-sub-item for hover targets */}
+      {/*
+        SidebarMenuSubItem gives group/menu-sub-item so we can
+        reveal the ··· button on row hover.
+      */}
       <SidebarMenuSubItem>
         <Collapsible className="group/collapsible" defaultOpen={hasActiveRoom}>
-          {/* Trigger row — action button sits inside so it aligns naturally */}
-          <div className="relative flex items-center">
+          {/*
+            Relative wrapper lets the absolute-positioned ··· button
+            anchor to the right edge of this row.
+          */}
+          <div className="relative">
             <CollapsibleTrigger
               render={
                 <SidebarMenuSubButton
-                  // Make room for the absolute-positioned action button
-                  className="flex-1 pr-6"
+                  /*
+                    pr-6 reserves space for the ··· button so text is never
+                    obscured when hovering over an area row.
+                  */
+                  className="w-full pr-6 text-sidebar-foreground/80"
                 />
               }
             >
-              {area.rooms.length > 0 ? (
-                <ChevronRightIcon className="size-3 shrink-0 text-sidebar-foreground/40 transition-transform duration-200 group-data-[open]/collapsible:rotate-90" />
-              ) : (
-                <span className="size-3 shrink-0" />
-              )}
-              <LayoutGridIcon className="size-3.5 shrink-0 text-sidebar-foreground/60" />
+              <ChevronRightIcon
+                className={cn(
+                  "!size-3 shrink-0 text-sidebar-foreground/30 transition-transform duration-200",
+                  "group-data-[open]/collapsible:rotate-90",
+                  !area.rooms.length && "invisible"
+                )}
+              />
+              <LayoutGridIcon className="!size-3.5 shrink-0 text-sidebar-foreground/50" />
               <span className="truncate">{area.name}</span>
             </CollapsibleTrigger>
 
-            {/* Hover action button — absolutely placed at the right edge */}
+            {/* ··· area actions — fade in on hover */}
             <DropdownMenu>
               <DropdownMenuTrigger
                 render={
                   <button
                     className={cn(
-                      "absolute right-1 flex size-5 items-center justify-center rounded-md",
-                      "text-sidebar-foreground/60 opacity-0 transition-opacity",
+                      "absolute right-1 top-1/2 -translate-y-1/2",
+                      "flex size-5 cursor-pointer items-center justify-center rounded-md",
+                      "text-sidebar-foreground/40 opacity-0",
+                      "transition-[opacity,background-color,color] duration-150",
                       "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                       "group-hover/menu-sub-item:opacity-100",
-                      "aria-expanded:opacity-100",
+                      "aria-expanded:opacity-100 aria-expanded:text-sidebar-accent-foreground"
                     )}
                   />
                 }
@@ -337,13 +387,17 @@ function AreaItem({
             </DropdownMenu>
           </div>
 
-          {/* Rooms inside this area.
-              We intentionally do NOT use SidebarMenuSub here — it would add
-              a second border-l inside the project's border-l, causing overflow.
-              Instead we just indent with padding. */}
+          {/*
+            Rooms inside this area.
+
+            We intentionally avoid nesting another <SidebarMenuSub> here.
+            A second border-l inside the project's border-l would bleed past
+            its container. Instead we use a plain indented list that visually
+            continues the existing border hierarchy via a subtle left border.
+          */}
           {area.rooms.length > 0 && (
             <CollapsibleContent>
-              <ul className="my-0.5 ml-3.5 flex flex-col gap-0.5 border-l border-sidebar-border pl-3">
+              <ul className="mb-0.5 ml-[13px] mt-px flex flex-col border-l border-sidebar-border/60 pl-3">
                 {area.rooms.map((room) => (
                   <AreaRoomItem
                     key={room.id}
@@ -368,7 +422,7 @@ function AreaItem({
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
         title="Delete area?"
-        description={`This will permanently delete "${area.name}" and all its rooms and line items. This cannot be undone.`}
+        description={`Permanently delete "${area.name}" and all its rooms and line items? This cannot be undone.`}
         onConfirm={handleDelete}
         loading={deleting}
       />
@@ -376,7 +430,7 @@ function AreaItem({
   )
 }
 
-// ─── Room inside an area ─────────────────────────────────────────────────────
+// ─── Room nested inside an area ───────────────────────────────────────────────
 
 function AreaRoomItem({
   room,
@@ -407,35 +461,35 @@ function AreaRoomItem({
 
   return (
     <>
-      {/* Custom li — mirrors SidebarMenuSubItem but without the nested sub styles */}
-      <li className="group/area-room relative">
+      <li className="group/area-room relative py-px">
         <button
           onClick={() => router.push(roomPath)}
           data-active={isActive ? "" : undefined}
           className={cn(
-            "flex h-7 w-full items-center gap-2 rounded-md px-2 text-sm",
-            "text-sidebar-foreground",
+            "flex h-7 w-full cursor-pointer items-center gap-2 rounded-md px-2 text-sm",
+            "text-sidebar-foreground/70",
+            "transition-[background-color,color] duration-150",
             "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-            "data-[data-active]:bg-sidebar-accent data-[data-active]:font-medium data-[data-active]:text-sidebar-accent-foreground",
-            // Tailwind v4 data-* variant
-            "data-active:bg-sidebar-accent data-active:font-medium data-active:text-sidebar-accent-foreground",
+            "data-active:bg-sidebar-accent data-active:font-medium data-active:text-sidebar-accent-foreground"
           )}
         >
-          <DoorOpenIcon className="size-3.5 shrink-0 text-sidebar-foreground/60" />
+          <DoorOpenIcon className="size-3.5 shrink-0 text-sidebar-foreground/40" />
           <span className="truncate">{room.name}</span>
         </button>
 
-        {/* Action button visible on row hover */}
+        {/* ··· room actions — fade in on row hover */}
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
               <button
                 className={cn(
-                  "absolute right-1 top-1 flex size-5 items-center justify-center rounded-md",
-                  "text-sidebar-foreground/60 opacity-0 transition-opacity",
+                  "absolute right-1 top-1/2 -translate-y-1/2",
+                  "flex size-5 cursor-pointer items-center justify-center rounded-md",
+                  "text-sidebar-foreground/40 opacity-0",
+                  "transition-[opacity,background-color,color] duration-150",
                   "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                   "group-hover/area-room:opacity-100",
-                  "aria-expanded:opacity-100",
+                  "aria-expanded:opacity-100 aria-expanded:text-sidebar-accent-foreground"
                 )}
               />
             }
@@ -458,7 +512,7 @@ function AreaRoomItem({
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
         title="Delete room?"
-        description={`This will permanently delete "${room.name}" and all its line items. This cannot be undone.`}
+        description={`Permanently delete "${room.name}" and all its line items? This cannot be undone.`}
         onConfirm={handleDelete}
         loading={deleting}
       />
@@ -466,7 +520,7 @@ function AreaRoomItem({
   )
 }
 
-// ─── Standalone room (not inside an area) ────────────────────────────────────
+// ─── Standalone room (directly under a project, no area) ─────────────────────
 
 function StandaloneRoomItem({
   room,
@@ -501,22 +555,25 @@ function StandaloneRoomItem({
         <SidebarMenuSubButton
           isActive={isActive}
           onClick={() => router.push(roomPath)}
+          className="text-sidebar-foreground/70"
         >
-          <DoorOpenIcon className="size-3.5 shrink-0 text-sidebar-foreground/60" />
+          <DoorOpenIcon className="!size-3.5 shrink-0 text-sidebar-foreground/40" />
           <span className="truncate">{room.name}</span>
         </SidebarMenuSubButton>
 
-        {/* Action button visible on row hover */}
+        {/* ··· room actions — fade in on row hover */}
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
               <button
                 className={cn(
-                  "absolute right-1 top-1 flex size-5 items-center justify-center rounded-md",
-                  "text-sidebar-foreground/60 opacity-0 transition-opacity",
+                  "absolute right-1 top-1/2 -translate-y-1/2",
+                  "flex size-5 cursor-pointer items-center justify-center rounded-md",
+                  "text-sidebar-foreground/40 opacity-0",
+                  "transition-[opacity,background-color,color] duration-150",
                   "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                   "group-hover/menu-sub-item:opacity-100",
-                  "aria-expanded:opacity-100",
+                  "aria-expanded:opacity-100 aria-expanded:text-sidebar-accent-foreground"
                 )}
               />
             }
@@ -539,7 +596,7 @@ function StandaloneRoomItem({
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
         title="Delete room?"
-        description={`This will permanently delete "${room.name}" and all its line items. This cannot be undone.`}
+        description={`Permanently delete "${room.name}" and all its line items? This cannot be undone.`}
         onConfirm={handleDelete}
         loading={deleting}
       />
@@ -547,7 +604,7 @@ function StandaloneRoomItem({
   )
 }
 
-// ─── Shared delete confirmation dialog ──────────────────────────────────────
+// ─── Shared delete confirmation ───────────────────────────────────────────────
 
 function DeleteDialog({
   open,
