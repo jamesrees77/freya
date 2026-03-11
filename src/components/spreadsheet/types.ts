@@ -25,6 +25,7 @@ export interface SpreadsheetData {
   roomName: string
   projectId: string
   groups: SpreadsheetGroup[]
+  ungroupedItems: SpreadsheetLineItem[]
 }
 
 // Prisma returns Decimals — this is what we get from the DB before converting
@@ -54,4 +55,5 @@ export interface RawRoomData {
   projectId: string
   project: { userId: string }
   lineItemGroups: RawLineItemGroup[]
+  lineItems: RawLineItem[]
 }

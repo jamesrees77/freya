@@ -59,6 +59,13 @@ export async function getRoomWithLineItems(roomId: string) {
           },
         },
       },
+      lineItems: {
+        where: { groupId: null },
+        orderBy: { sortOrder: "asc" },
+        include: {
+          supplier: { select: { name: true } },
+        },
+      },
     },
   })
 

@@ -1,14 +1,15 @@
 "use client"
 
-import type { SpreadsheetGroup } from "./types"
+import type { SpreadsheetGroup, SpreadsheetLineItem } from "./types"
 import { calculateRoomTotal, formatCurrency } from "@/lib/calculations"
 
 interface SpreadsheetFooterProps {
   groups: SpreadsheetGroup[]
+  ungroupedItems?: SpreadsheetLineItem[]
 }
 
-export function SpreadsheetFooter({ groups }: SpreadsheetFooterProps) {
-  const roomTotal = calculateRoomTotal(groups)
+export function SpreadsheetFooter({ groups, ungroupedItems = [] }: SpreadsheetFooterProps) {
+  const roomTotal = calculateRoomTotal(groups, ungroupedItems)
 
   return (
     <tfoot>

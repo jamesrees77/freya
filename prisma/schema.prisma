@@ -70,6 +70,7 @@ model Room {
   updatedAt DateTime @updatedAt
 
   lineItemGroups LineItemGroup[]
+  lineItems      LineItem[]
 
   @@index([projectId, sortOrder])
   @@index([areaId, sortOrder])
@@ -113,13 +114,16 @@ model LineItem {
   markupPercent Decimal  @default(0)    @db.Decimal(5, 2)
   sellPrice     Decimal  @default(0)    @db.Decimal(10, 2)
   sortOrder     Int      @default(0)
-  groupId       String
-  group         LineItemGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  roomId        String
+  room          Room          @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  groupId       String?
+  group         LineItemGroup? @relation(fields: [groupId], references: [id], onDelete: Cascade)
   supplierId    String?
   supplier      Supplier?     @relation(fields: [supplierId], references: [id], onDelete: SetNull)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  @@index([roomId, sortOrder])
   @@index([groupId, sortOrder])
   @@index([supplierId])
 }

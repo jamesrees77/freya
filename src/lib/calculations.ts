@@ -19,10 +19,14 @@ export function calculateGroupTotal(items: SpreadsheetLineItem[]): number {
   }, 0)
 }
 
-export function calculateRoomTotal(groups: SpreadsheetGroup[]): number {
-  return groups.reduce((sum, group) => {
+export function calculateRoomTotal(groups: SpreadsheetGroup[], ungroupedItems: SpreadsheetLineItem[] = []): number {
+  const groupsTotal = groups.reduce((sum, group) => {
     return sum + calculateGroupTotal(group.items)
   }, 0)
+  const ungroupedTotal = ungroupedItems.reduce((sum, item) => {
+    return sum + calculateLineTotal(item.quantity, item.sellPrice)
+  }, 0)
+  return groupsTotal + ungroupedTotal
 }
 
 export function formatCurrency(value: number): string {

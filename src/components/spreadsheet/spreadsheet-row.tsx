@@ -24,6 +24,7 @@ interface SpreadsheetRowProps {
   onCommitEdit: () => void
   suppliers: SupplierOption[]
   onSupplierSelect: (itemId: string, supplierId: string | null, supplierName: string | null) => void
+  onDeleteItem?: (itemId: string) => void
   isCellSelected?: (rowId: string, columnId: string) => boolean
   onExtendSelection?: (cell: CellAddress) => void
   onStartDragSelection?: (cell: CellAddress) => void
@@ -59,6 +60,7 @@ export const SpreadsheetRow = memo(function SpreadsheetRow({
   onCommitEdit,
   suppliers,
   onSupplierSelect,
+  onDeleteItem,
   isCellSelected,
   onExtendSelection,
   onStartDragSelection,
@@ -67,9 +69,23 @@ export const SpreadsheetRow = memo(function SpreadsheetRow({
   const lineTotal = calculateLineTotal(item.quantity, item.sellPrice)
 
   return (
-    <tr className="bg-white">
-      {/* Gutter column */}
-      <td className="h-6 w-7 border border-gray-200 bg-gray-50" />
+    <tr className="group/row bg-white">
+      {/* Gutter column with delete button on hover */}
+      <td className="h-6 w-7 border border-gray-200 bg-gray-50 text-center">
+        {onDeleteItem && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              onDeleteItem(item.id)
+            }}
+            className="hidden text-[11px] leading-none text-gray-400 hover:text-red-500 group-hover/row:inline"
+            title="Delete item"
+          >
+            &times;
+          </button>
+        )}
+      </td>
       {CELL_CONFIGS.map((config) => {
         const isCellActive =
           activeCell?.rowId === item.id &&

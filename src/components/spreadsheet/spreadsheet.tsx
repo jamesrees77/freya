@@ -1,12 +1,13 @@
 "use client"
 
 import { useState, useMemo, useRef, useCallback } from "react"
-import type { SpreadsheetData } from "./types"
+import type { SpreadsheetData, SpreadsheetLineItem } from "./types"
 import { SpreadsheetHeader } from "./spreadsheet-header"
 import { SpreadsheetGroupRow } from "./spreadsheet-group-row"
 import { SpreadsheetRow } from "./spreadsheet-row"
 import { SpreadsheetFooter } from "./spreadsheet-footer"
 import { useSpreadsheet } from "@/hooks/use-spreadsheet"
+import { useAutoSave, type SaveStatus } from "@/hooks/use-auto-save"
 import {
   useCellNavigation,
   EDITABLE_COLUMNS,
@@ -14,7 +15,9 @@ import {
   type EditableColumn,
 } from "@/hooks/use-cell-navigation"
 import { useSelection } from "@/hooks/use-selection"
-import { getRawEditValue } from "./spreadsheet-cell"
+import { getRawEditValue, type CellType } from "./spreadsheet-cell"
+import { createLineItem, deleteLineItem } from "@/actions/line-items"
+import { createGroup, updateGroup, deleteGroup as deleteGroupAction } from "@/actions/line-item-groups"
 
 interface SupplierOption {
   id: string
@@ -41,18 +44,52 @@ const COLUMN_TYPE_MAP: Record<string, string> = {
   sellPrice: "currency",
 }
 
+function SaveStatusIndicator({ status }: { status: SaveStatus }) {
+  if (status === "saved") {
+    return <span className="text-xs text-gray-400">Saved</span>
+  }
+  if (status === "saving") {
+    return <span className="text-xs text-amber-500">Saving...</span>
+  }
+  return <span className="text-xs text-red-500">Save error</span>
+}
+
 export function Spreadsheet({ data: initialData, suppliers }: SpreadsheetProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const { data, updateCell, updateSupplier, batchUpdate, undo, redo } =
-    useSpreadsheet(initialData)
+  const {
+    data,
+    dirtyItemIds,
+    updateCell,
+    updateSupplier,
+    batchUpdate,
+    addItem,
+    deleteItem,
+    addGroup,
+    deleteGroup,
+    updateGroupName,
+    clearDirty,
+    undo,
+    redo,
+  } = useSpreadsheet(initialData)
+
+  const { saveStatus } = useAutoSave({
+    data,
+    dirtyItemIds,
+    clearDirty,
+  })
 
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(() => {
     return new Set(data.groups.map((g) => g.id))
   })
 
-  // Flat ordered list of visible row IDs
+  // Flat ordered list of visible row IDs (ungrouped items + grouped items)
   const visibleRowIds = useMemo(() => {
     const ids: string[] = []
+    // Ungrouped items first
+    for (const item of data.ungroupedItems) {
+      ids.push(item.id)
+    }
+    // Then grouped items
     for (const group of data.groups) {
       if (expandedGroups.has(group.id)) {
         for (const item of group.items) {
@@ -61,18 +98,21 @@ export function Spreadsheet({ data: initialData, suppliers }: SpreadsheetProps) 
       }
     }
     return ids
-  }, [data.groups, expandedGroups])
+  }, [data.groups, data.ungroupedItems, expandedGroups])
 
   // Lookup: item ID → item data
   const itemMap = useMemo(() => {
-    const map = new Map<string, (typeof data.groups)[number]["items"][number]>()
+    const map = new Map<string, SpreadsheetLineItem>()
+    for (const item of data.ungroupedItems) {
+      map.set(item.id, item)
+    }
     for (const group of data.groups) {
       for (const item of group.items) {
         map.set(item.id, item)
       }
     }
     return map
-  }, [data.groups])
+  }, [data.groups, data.ungroupedItems])
 
   // Selection hook
   const selection = useSelection({ visibleRowIds })
@@ -95,7 +135,7 @@ export function Spreadsheet({ data: initialData, suppliers }: SpreadsheetProps) 
 
       const rawValue = valueMap[cell.columnId] ?? ""
       const type = COLUMN_TYPE_MAP[cell.columnId] ?? "text"
-      return getRawEditValue(rawValue, type as any)
+      return getRawEditValue(rawValue, type as CellType)
     },
     [itemMap]
   )
@@ -163,17 +203,7 @@ export function Spreadsheet({ data: initialData, suppliers }: SpreadsheetProps) 
     [updateCell, updateSupplier]
   )
 
-  // --- Extend selection via keyboard (Shift+Arrow) ---
-  const handleExtendSelection = useCallback(
-    (direction: "up" | "down" | "left" | "right") => {
-      // activeCell comes from the navigation hook — we read it from the ref below
-      // We need to access it via the returned value, so we use a ref pattern
-    },
-    []
-  )
-
   // We need activeCell for copy/paste/selection, but it comes from useCellNavigation.
-  // Use a ref to hold it so callbacks can access it without circular deps.
   const activeCellRef = useRef<CellAddress | null>(null)
 
   // --- Copy ---
@@ -407,38 +437,128 @@ export function Spreadsheet({ data: initialData, suppliers }: SpreadsheetProps) 
     [updateSupplier, commitEdit]
   )
 
-  if (data.groups.length === 0) {
+  // --- Add/Delete handlers ---
+  const handleAddItem = useCallback(
+    async (groupId?: string) => {
+      try {
+        const created = await createLineItem(data.roomId, groupId)
+        const newItem: SpreadsheetLineItem = {
+          id: created.id,
+          description: "",
+          quantity: 1,
+          unit: "each",
+          unitCost: 0,
+          markupPercent: 0,
+          sellPrice: 0,
+          sortOrder: created.sortOrder,
+          supplierId: null,
+          supplierName: null,
+        }
+        addItem(newItem, groupId)
+      } catch {
+        // TODO: toast error
+      }
+    },
+    [data.roomId, addItem]
+  )
+
+  const handleDeleteItem = useCallback(
+    async (itemId: string) => {
+      try {
+        await deleteLineItem(itemId)
+        deleteItem(itemId)
+      } catch {
+        // TODO: toast error
+      }
+    },
+    [deleteItem]
+  )
+
+  const handleAddGroup = useCallback(async () => {
+    try {
+      const created = await createGroup(data.roomId, "New Group")
+      addGroup({ id: created.id, name: created.name, sortOrder: created.sortOrder })
+      setExpandedGroups((prev) => new Set([...prev, created.id]))
+    } catch {
+      // TODO: toast error
+    }
+  }, [data.roomId, addGroup])
+
+  const handleDeleteGroup = useCallback(
+    async (groupId: string) => {
+      try {
+        await deleteGroupAction(groupId)
+        deleteGroup(groupId)
+      } catch {
+        // TODO: toast error
+      }
+    },
+    [deleteGroup]
+  )
+
+  const handleUpdateGroupName = useCallback(
+    async (groupId: string, name: string) => {
+      updateGroupName(groupId, name)
+      try {
+        await updateGroup(groupId, { name })
+      } catch {
+        // TODO: toast error / revert
+      }
+    },
+    [updateGroupName]
+  )
+
+  const hasContent = data.groups.length > 0 || data.ungroupedItems.length > 0
+
+  if (!hasContent) {
     return (
-      <div className="flex h-64 items-center justify-center">
+      <div className="flex h-64 flex-col items-center justify-center gap-3">
         <div className="text-center">
-          <p className="text-muted-foreground">No line item groups yet.</p>
+          <p className="text-muted-foreground">No items yet.</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Groups and items will appear here once created.
+            Add an item or create a group to get started.
           </p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => handleAddItem()}
+            className="rounded border border-gray-300 px-3 py-1 text-sm text-gray-600 hover:bg-gray-50"
+          >
+            + Add Item
+          </button>
+          <button
+            type="button"
+            onClick={handleAddGroup}
+            className="rounded border border-gray-300 px-3 py-1 text-sm text-gray-600 hover:bg-gray-50"
+          >
+            + Add Group
+          </button>
         </div>
       </div>
     )
   }
 
   return (
-    <div
-      ref={containerRef}
-      tabIndex={0}
-      onKeyDown={handleContainerKeyDown}
-      onMouseUp={handleMouseUp}
-      className="overflow-auto border border-border bg-white outline-none"
-    >
-      <table className="w-full" style={{ borderCollapse: "collapse" }}>
-        <SpreadsheetHeader />
-        <tbody>
-          {data.groups.map((group) => {
-            const isExpanded = expandedGroups.has(group.id)
-            return (
-              <GroupSection
-                key={group.id}
-                group={group}
-                isExpanded={isExpanded}
-                onToggle={() => toggleGroup(group.id)}
+    <div className="flex flex-col gap-2">
+      <div className="flex justify-end px-2">
+        <SaveStatusIndicator status={saveStatus} />
+      </div>
+      <div
+        ref={containerRef}
+        tabIndex={0}
+        onKeyDown={handleContainerKeyDown}
+        onMouseUp={handleMouseUp}
+        className="overflow-auto border border-border bg-white outline-none"
+      >
+        <table className="w-full" style={{ borderCollapse: "collapse" }}>
+          <SpreadsheetHeader />
+          <tbody>
+            {/* Ungrouped items */}
+            {data.ungroupedItems.map((item) => (
+              <SpreadsheetRow
+                key={item.id}
+                item={item}
                 activeCell={activeCell}
                 isEditing={isEditing}
                 editValue={editValue}
@@ -449,16 +569,64 @@ export function Spreadsheet({ data: initialData, suppliers }: SpreadsheetProps) 
                 onCommitEdit={commitEdit}
                 suppliers={suppliers}
                 onSupplierSelect={handleSupplierSelect}
+                onDeleteItem={handleDeleteItem}
                 isCellSelected={selection.isCellSelected}
                 onExtendSelection={handleExtendSelectionToCell}
                 onStartDragSelection={handleStartDragSelection}
                 onUpdateDragSelection={handleUpdateDragSelection}
               />
-            )
-          })}
-        </tbody>
-        <SpreadsheetFooter groups={data.groups} />
-      </table>
+            ))}
+            {/* Grouped items */}
+            {data.groups.map((group) => {
+              const isExpanded = expandedGroups.has(group.id)
+              return (
+                <GroupSection
+                  key={group.id}
+                  group={group}
+                  isExpanded={isExpanded}
+                  onToggle={() => toggleGroup(group.id)}
+                  activeCell={activeCell}
+                  isEditing={isEditing}
+                  editValue={editValue}
+                  onSelectCell={handleSelectCell}
+                  onStartEditing={startEditing}
+                  onEditValueChange={setEditValue}
+                  onCellInputKeyDown={handleCellInputKeyDown}
+                  onCommitEdit={commitEdit}
+                  suppliers={suppliers}
+                  onSupplierSelect={handleSupplierSelect}
+                  onDeleteItem={handleDeleteItem}
+                  onAddItem={handleAddItem}
+                  onDeleteGroup={handleDeleteGroup}
+                  onUpdateGroupName={handleUpdateGroupName}
+                  isCellSelected={selection.isCellSelected}
+                  onExtendSelection={handleExtendSelectionToCell}
+                  onStartDragSelection={handleStartDragSelection}
+                  onUpdateDragSelection={handleUpdateDragSelection}
+                />
+              )
+            })}
+          </tbody>
+          <SpreadsheetFooter groups={data.groups} ungroupedItems={data.ungroupedItems} />
+        </table>
+      </div>
+      {/* Action buttons */}
+      <div className="flex gap-2 px-2">
+        <button
+          type="button"
+          onClick={() => handleAddItem()}
+          className="rounded border border-gray-300 px-3 py-1 text-sm text-gray-600 hover:bg-gray-50"
+        >
+          + Add Item
+        </button>
+        <button
+          type="button"
+          onClick={handleAddGroup}
+          className="rounded border border-gray-300 px-3 py-1 text-sm text-gray-600 hover:bg-gray-50"
+        >
+          + Add Group
+        </button>
+      </div>
     </div>
   )
 }
@@ -477,6 +645,10 @@ function GroupSection({
   onCommitEdit,
   suppliers,
   onSupplierSelect,
+  onDeleteItem,
+  onAddItem,
+  onDeleteGroup,
+  onUpdateGroupName,
   isCellSelected,
   onExtendSelection,
   onStartDragSelection,
@@ -495,6 +667,10 @@ function GroupSection({
   onCommitEdit: () => void
   suppliers: SupplierOption[]
   onSupplierSelect: (itemId: string, supplierId: string | null, supplierName: string | null) => void
+  onDeleteItem: (itemId: string) => void
+  onAddItem: (groupId?: string) => void
+  onDeleteGroup: (groupId: string) => void
+  onUpdateGroupName: (groupId: string, name: string) => void
   isCellSelected: (rowId: string, columnId: string) => boolean
   onExtendSelection: (cell: CellAddress) => void
   onStartDragSelection: (cell: CellAddress) => void
@@ -507,6 +683,9 @@ function GroupSection({
         isExpanded={isExpanded}
         onToggle={onToggle}
         columnCount={TOTAL_COLUMN_COUNT}
+        onUpdateGroupName={onUpdateGroupName}
+        onDeleteGroup={onDeleteGroup}
+        onAddItem={onAddItem}
       />
       {isExpanded &&
         group.items.map((item) => (
@@ -523,6 +702,7 @@ function GroupSection({
             onCommitEdit={onCommitEdit}
             suppliers={suppliers}
             onSupplierSelect={onSupplierSelect}
+            onDeleteItem={onDeleteItem}
             isCellSelected={isCellSelected}
             onExtendSelection={onExtendSelection}
             onStartDragSelection={onStartDragSelection}
@@ -531,4 +711,9 @@ function GroupSection({
         ))}
     </>
   )
+}
+
+interface SupplierOption {
+  id: string
+  name: string
 }

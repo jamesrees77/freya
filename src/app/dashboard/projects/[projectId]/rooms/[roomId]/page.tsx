@@ -6,6 +6,19 @@ import type { SpreadsheetData } from "@/components/spreadsheet/types"
 import type { RawRoomData } from "@/components/spreadsheet/types"
 
 function toSpreadsheetData(room: RawRoomData): SpreadsheetData {
+  const mapItem = (item: RawRoomData["lineItemGroups"][number]["lineItems"][number]) => ({
+    id: item.id,
+    description: item.description,
+    quantity: Number(item.quantity),
+    unit: item.unit,
+    unitCost: Number(item.unitCost),
+    markupPercent: Number(item.markupPercent),
+    sellPrice: Number(item.sellPrice),
+    sortOrder: item.sortOrder,
+    supplierId: item.supplierId,
+    supplierName: item.supplier?.name ?? null,
+  })
+
   return {
     roomId: room.id,
     roomName: room.name,
@@ -14,19 +27,9 @@ function toSpreadsheetData(room: RawRoomData): SpreadsheetData {
       id: group.id,
       name: group.name,
       sortOrder: group.sortOrder,
-      items: group.lineItems.map((item) => ({
-        id: item.id,
-        description: item.description,
-        quantity: Number(item.quantity),
-        unit: item.unit,
-        unitCost: Number(item.unitCost),
-        markupPercent: Number(item.markupPercent),
-        sellPrice: Number(item.sellPrice),
-        sortOrder: item.sortOrder,
-        supplierId: item.supplierId,
-        supplierName: item.supplier?.name ?? null,
-      })),
+      items: group.lineItems.map(mapItem),
     })),
+    ungroupedItems: room.lineItems.map(mapItem),
   }
 }
 

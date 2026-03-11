@@ -62,7 +62,6 @@ const SELECTED_BG = "bg-[#d4e4fc]"
 
 export function SpreadsheetCell({
   value,
-  columnId,
   type,
   align = "left",
   isActive,
