@@ -18,6 +18,7 @@ import { useSelection } from "@/hooks/use-selection"
 import { getRawEditValue, type CellType } from "./spreadsheet-cell"
 import { createLineItem, deleteLineItem } from "@/actions/line-items"
 import { createGroup, updateGroup, deleteGroup as deleteGroupAction } from "@/actions/line-item-groups"
+import { toast } from "sonner"
 
 interface SupplierOption {
   id: string
@@ -456,7 +457,7 @@ export function Spreadsheet({ data: initialData, suppliers }: SpreadsheetProps) 
         }
         addItem(newItem, groupId)
       } catch {
-        // TODO: toast error
+        toast.error("Failed to add item")
       }
     },
     [data.roomId, addItem]
@@ -468,7 +469,7 @@ export function Spreadsheet({ data: initialData, suppliers }: SpreadsheetProps) 
         await deleteLineItem(itemId)
         deleteItem(itemId)
       } catch {
-        // TODO: toast error
+        toast.error("Failed to delete item")
       }
     },
     [deleteItem]
@@ -480,7 +481,7 @@ export function Spreadsheet({ data: initialData, suppliers }: SpreadsheetProps) 
       addGroup({ id: created.id, name: created.name, sortOrder: created.sortOrder })
       setExpandedGroups((prev) => new Set([...prev, created.id]))
     } catch {
-      // TODO: toast error
+      toast.error("Failed to add group")
     }
   }, [data.roomId, addGroup])
 
@@ -490,7 +491,7 @@ export function Spreadsheet({ data: initialData, suppliers }: SpreadsheetProps) 
         await deleteGroupAction(groupId)
         deleteGroup(groupId)
       } catch {
-        // TODO: toast error
+        toast.error("Failed to delete group")
       }
     },
     [deleteGroup]
@@ -502,7 +503,7 @@ export function Spreadsheet({ data: initialData, suppliers }: SpreadsheetProps) 
       try {
         await updateGroup(groupId, { name })
       } catch {
-        // TODO: toast error / revert
+        toast.error("Failed to save group name")
       }
     },
     [updateGroupName]

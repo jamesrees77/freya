@@ -53,7 +53,9 @@ export interface RawRoomData {
   id: string
   name: string
   projectId: string
-  project: { userId: string }
+  areaId: string | null
+  project: { userId: string; name: string }
+  area: { id: string; name: string } | null
   lineItemGroups: RawLineItemGroup[]
   lineItems: RawLineItem[]
 }

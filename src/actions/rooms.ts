@@ -47,7 +47,8 @@ export async function getRoomWithLineItems(roomId: string) {
   const room = await prisma.room.findUnique({
     where: { id: roomId },
     include: {
-      project: { select: { userId: true } },
+      project: { select: { userId: true, name: true } },
+      area: { select: { id: true, name: true } },
       lineItemGroups: {
         orderBy: { sortOrder: "asc" },
         include: {
